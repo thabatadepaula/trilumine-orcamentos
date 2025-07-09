@@ -1,5 +1,7 @@
+import Materiais from "./Materiais";
+
 function App() {
-  return <div>App funcionando sem TesteSupabase!</div>;
+  return <Materiais />;
 }
 
 export default App;
