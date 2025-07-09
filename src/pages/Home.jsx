@@ -1,35 +1,56 @@
-import logo from "../assets/logo-trilumine.png"; // só o nome Triluminè
 import { Link } from "react-router-dom";
+import logoCompleto from "../assets/logo-trilumine.png";
 
 export default function Home() {
   return (
     <div
       style={{
-        background: "#fff",
-        height: "100vh",
-        width: "100%",
+        backgroundColor: "#fff",
+        minHeight: "100vh",
+        padding: "2rem",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        padding: "2rem",
         boxSizing: "border-box",
       }}
     >
-      <img src={logo} alt="Triluminè" style={{ width: "250px", marginBottom: "2rem" }} />
+      <img
+        src={logoCompleto}
+        alt="Triluminè logo"
+        style={{ width: "250px", marginBottom: "2rem" }}
+      />
 
-      <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", justifyContent: "center" }}>
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: "1rem",
+          justifyContent: "center",
+        }}
+      >
         <Link to="/materiais">
-          <button style={{ ...buttonStyle, backgroundColor: "#f4c542" }}>Materiais</button>
+          <button style={{ ...buttonStyle, backgroundColor: "#fecd1a" }}>
+            Materiais
+          </button>
         </Link>
+
         <Link to="/produtos">
-          <button style={{ ...buttonStyle, backgroundColor: "#e23d74" }}>Produtos</button>
+          <button style={{ ...buttonStyle, backgroundColor: "#eb1e77" }}>
+            Produtos
+          </button>
         </Link>
+
         <Link to="/clientes">
-          <button style={{ ...buttonStyle, backgroundColor: "#2b91e3" }}>Clientes</button>
+          <button style={{ ...buttonStyle, backgroundColor: "#2d8cf0" }}>
+            Clientes
+          </button>
         </Link>
+
         <Link to="/orcamentos">
-          <button style={{ ...buttonStyle, backgroundColor: "#44b35c" }}>Orçamentos</button>
+          <button style={{ ...buttonStyle, backgroundColor: "#28a745" }}>
+            Orçamentos
+          </button>
         </Link>
       </div>
     </div>
@@ -38,12 +59,10 @@ export default function Home() {
 
 const buttonStyle = {
   color: "#fff",
-  padding: "0.8rem 1.2rem",
   border: "none",
-  borderRadius: "8px",
-  fontWeight: "bold",
+  padding: "1rem 1.5rem",
   fontSize: "1rem",
+  borderRadius: "10px",
+  fontWeight: "bold",
   cursor: "pointer",
-  minWidth: "120px",
-  textAlign: "center",
 };

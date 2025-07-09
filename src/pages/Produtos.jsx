@@ -1,161 +1,141 @@
-import { useState, useEffect } from "react";
-import axios from "axios";
-
-const SHEET_API_URL = "https://api.sheetbest.com/sheets/9ea85faf-fb6d-4035-993b-5ea4ea4ba2a9"; // sua URL da API da planilha
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import logoSimples from "../assets/logo-trilumine.png2.png";
 
 export default function Produtos() {
   const [produtos, setProdutos] = useState([]);
-  const [materiais, setMateriais] = useState([]);
-
-  // Campos para novo produto
   const [nome, setNome] = useState("");
-  const [componentes, setComponentes] = useState([]); // materiais + quantidade
-  const [margemLucro, setMargemLucro] = useState(""); // % lucro
-  const [outrosCustos, setOutrosCustos] = useState(""); // custos fixos/variáveis
+  const [descricao, setDescricao] = useState("");
+  const [materiais, setMateriais] = useState("");
+  const [precoFinal, setPrecoFinal] = useState("");
 
-  // Buscar Produtos e Materiais
-  useEffect(() => {
-    async function fetchData() {
-      // Produtos
-      const resProd = await axios.get(`${SHEET_API_URL}/Produtos`);
-      setProdutos(resProd.data);
-
-      // Materiais para montar componentes
-      const resMat = await axios.get(`${SHEET_API_URL}/Materiais`);
-      setMateriais(resMat.data);
-    }
-    fetchData();
-  }, []);
-
-  // Adicionar material à lista de componentes do produto com quantidade
-  function adicionarComponente(materialId) {
-    if (!materialId) return;
-    const existe = componentes.find(c => c.materialId === materialId);
-    if (existe) return alert("Material já adicionado!");
-    setComponentes([...componentes, { materialId, quantidade: 1 }]);
-  }
-
-  // Alterar quantidade do componente
-  function alterarQuantidade(materialId, novaQtd) {
-    setComponentes(componentes.map(c => c.materialId === materialId ? {...c, quantidade: novaQtd} : c));
-  }
-
-  // Calcular custo total do produto (baseado nos componentes)
-  function calcularCusto() {
-    let custoMateriais = 0;
-    for (const comp of componentes) {
-      const mat = materiais.find(m => m.id === comp.materialId);
-      if (mat) {
-        const custoUnit = parseFloat(mat.custoUnitario || mat.preco) || 0;
-        custoMateriais += custoUnit * parseFloat(comp.quantidade || 0);
-      }
-    }
-    const lucro = custoMateriais * (parseFloat(margemLucro || 0) / 100);
-    const outros = parseFloat(outrosCustos || 0);
-    return (custoMateriais + lucro + outros).toFixed(2);
-  }
-
-  // Salvar produto na planilha
-  async function salvarProduto() {
-    if (!nome) return alert("Informe o nome do produto");
-
-    // Montar objeto produto para salvar (você pode adaptar a estrutura da planilha)
-    const novoProduto = {
-      nome,
-      componentes: JSON.stringify(componentes),
-      margemLucro,
-      outrosCustos,
-      precoVenda: calcularCusto()
-    };
-
-    try {
-      const res = await axios.post(`${SHEET_API_URL}/Produtos`, novoProduto);
-      setProdutos([res.data, ...produtos]);
-      // resetar form
-      setNome("");
-      setComponentes([]);
-      setMargemLucro("");
-      setOutrosCustos("");
-      alert("Produto salvo com sucesso!");
-    } catch (error) {
-      alert("Erro ao salvar produto: " + error.message);
-    }
-  }
+  const salvarProduto = () => {
+    if (!nome || !precoFinal) return;
+    const novoProduto = { nome, descricao, materiais, precoFinal };
+    setProdutos([...produtos, novoProduto]);
+    setNome("");
+    setDescricao("");
+    setMateriais("");
+    setPrecoFinal("");
+  };
 
   return (
-    <div style={{ padding: 20, maxWidth: 700 }}>
-      <h2>Cadastro de Produtos</h2>
+    <div style={styles.container}>
+      <img src={logoSimples} alt="Triluminè" style={styles.logo} />
 
-      <input
-        type="text"
-        placeholder="Nome do produto"
-        value={nome}
-        onChange={e => setNome(e.target.value)}
-        style={{ marginBottom: 10, width: "100%" }}
-      />
+      <h2 style={styles.title}>Cadastro de Produtos</h2>
 
-      <div style={{ marginBottom: 10 }}>
-        <label>Adicionar material:</label>
-        <select onChange={e => adicionarComponente(e.target.value)} value="">
-          <option value="" disabled>Selecione material</option>
-          {materiais.map(mat => (
-            <option key={mat.id} value={mat.id}>{mat.nome}</option>
+      <div style={styles.form}>
+        <input
+          type="text"
+          placeholder="Nome do produto"
+          value={nome}
+          onChange={(e) => setNome(e.target.value)}
+          style={styles.input}
+        />
+
+        <textarea
+          placeholder="Descrição"
+          value={descricao}
+          onChange={(e) => setDescricao(e.target.value)}
+          style={{ ...styles.input, height: "80px" }}
+        />
+
+        <input
+          type="text"
+          placeholder="Materiais usados (ex: papel, adesivo...)"
+          value={materiais}
+          onChange={(e) => setMateriais(e.target.value)}
+          style={styles.input}
+        />
+
+        <input
+          type="number"
+          placeholder="Preço final de venda (R$)"
+          value={precoFinal}
+          onChange={(e) => setPrecoFinal(e.target.value)}
+          style={styles.input}
+        />
+
+        <button onClick={salvarProduto} style={styles.btnSalvar}>
+          Salvar Produto
+        </button>
+      </div>
+
+      <div style={styles.lista}>
+        <h3>Produtos Cadastrados:</h3>
+        {produtos.length === 0 && <p>Nenhum produto cadastrado ainda.</p>}
+        <ul>
+          {produtos.map((p, index) => (
+            <li key={index}>
+              <strong>{p.nome}</strong> - R${p.precoFinal} <br />
+              <small>{p.descricao}</small>
+            </li>
           ))}
-        </select>
+        </ul>
       </div>
 
-      {componentes.map(comp => {
-        const mat = materiais.find(m => m.id === comp.materialId);
-        return (
-          <div key={comp.materialId} style={{ display: "flex", alignItems: "center", marginBottom: 5 }}>
-            <div style={{ flex: 1 }}>{mat?.nome}</div>
-            <input
-              type="number"
-              min="1"
-              value={comp.quantidade}
-              onChange={e => alterarQuantidade(comp.materialId, e.target.value)}
-              style={{ width: 60, marginLeft: 10 }}
-            />
-          </div>
-        );
-      })}
-
-      <input
-        type="number"
-        placeholder="Margem de lucro (%)"
-        value={margemLucro}
-        onChange={e => setMargemLucro(e.target.value)}
-        style={{ marginTop: 10, width: "100%" }}
-      />
-      <input
-        type="number"
-        placeholder="Outros custos (R$)"
-        value={outrosCustos}
-        onChange={e => setOutrosCustos(e.target.value)}
-        style={{ marginTop: 10, width: "100%" }}
-      />
-
-      <div style={{ marginTop: 15 }}>
-        <strong>Preço de venda estimado: R$ {calcularCusto()}</strong>
-      </div>
-
-      <button onClick={salvarProduto} style={{ marginTop: 20 }}>Salvar Produto</button>
-
-      <hr style={{ margin: "30px 0" }} />
-
-      <h3>Produtos cadastrados</h3>
-      <ul>
-        {produtos.map((prod, i) => (
-          <li key={i}>
-            <strong>{prod.nome}</strong> — Preço venda: R$ {prod.precoVenda}
-            <br />
-            Materiais: {JSON.parse(prod.componentes || "[]").map(c => {
-              const mat = materiais.find(m => m.id === c.materialId);
-              return mat ? `${mat.nome} (x${c.quantidade})` : null;
-            }).filter(Boolean).join(", ")}
-          </li>
-        ))}
-      </ul>
+      <Link to="/">
+        <button style={styles.btnVoltar}>← Voltar</button>
+      </Link>
     </div>
   );
 }
+
+const styles = {
+  container: {
+    backgroundColor: "#fff",
+    minHeight: "100vh",
+    padding: "2rem",
+    boxSizing: "border-box",
+    maxWidth: "800px",
+    margin: "0 auto",
+  },
+  logo: {
+    width: "150px",
+    display: "block",
+    margin: "0 auto 2rem",
+  },
+  title: {
+    textAlign: "center",
+    fontSize: "1.8rem",
+    marginBottom: "2rem",
+    color: "#333",
+  },
+  form: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "1rem",
+  },
+  input: {
+    padding: "0.8rem",
+    border: "1px solid #ccc",
+    borderRadius: "8px",
+    fontSize: "1rem",
+  },
+  btnSalvar: {
+    background: "#e91e63",
+    color: "#fff",
+    padding: "1rem",
+    border: "none",
+    borderRadius: "8px",
+    fontWeight: "bold",
+    fontSize: "1rem",
+    cursor: "pointer",
+    marginTop: "0.5rem",
+  },
+  lista: {
+    marginTop: "3rem",
+  },
+  btnVoltar: {
+    display: "block",
+    margin: "2rem auto 0",
+    background: "#fecd1a",
+    color: "#fff",
+    padding: "0.8rem 1.2rem",
+    fontWeight: "bold",
+    border: "none",
+    borderRadius: "8px",
+    cursor: "pointer",
+  },
+};

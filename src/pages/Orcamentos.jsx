@@ -1,156 +1,152 @@
-import { useState, useEffect } from "react";
-import jsPDF from "jspdf";
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import logoSimples from "../assets/logo-trilumine.png2.png";
 
-export default function Orcamento() {
-  const [clientes, setClientes] = useState([]);
-  const [produtos, setProdutos] = useState([]);
+export default function Orcamentos() {
+  const [cliente, setCliente] = useState("");
+  const [produto, setProduto] = useState("");
+  const [quantidade, setQuantidade] = useState("");
+  const [precoUnitario, setPrecoUnitario] = useState("");
+  const [orcamentos, setOrcamentos] = useState([]);
 
-  const [clienteSelecionado, setClienteSelecionado] = useState("");
-  const [produtoSelecionado, setProdutoSelecionado] = useState("");
-  const [quantidade, setQuantidade] = useState(1);
-  const [lucroPercent, setLucroPercent] = useState(30); // 30% lucro exemplo
-  const [custoFixo, setCustoFixo] = useState(10); // custo fixo base exemplo
-
-  const [precoFinal, setPrecoFinal] = useState(0);
-
-  // Simulação: substituir pelas suas URLs de API reais
-  const API_CLIENTES = "https://api.sheetbest.com/sheets/seu_id_clientes";
-  const API_PRODUTOS = "https://api.sheetbest.com/sheets/seu_id_produtos";
-
-  useEffect(() => {
-    fetch(API_CLIENTES)
-      .then((r) => r.json())
-      .then((data) => setClientes(data))
-      .catch(() => alert("Erro ao carregar clientes"));
-
-    fetch(API_PRODUTOS)
-      .then((r) => r.json())
-      .then((data) => setProdutos(data))
-      .catch(() => alert("Erro ao carregar produtos"));
-  }, []);
-
-  useEffect(() => {
-    if (!produtoSelecionado) return setPrecoFinal(0);
-    // Pega o produto selecionado do array
-    const prod = produtos.find((p) => p.id === produtoSelecionado);
-    if (!prod) return setPrecoFinal(0);
-
-    const custoProduto = Number(prod.custo || 0);
-    // Fórmula: (custo do produto + custo fixo) * (1 + lucro%)
-    const preco = (custoProduto + custoFixo) * (1 + lucroPercent / 100) * quantidade;
-    setPrecoFinal(preco.toFixed(2));
-  }, [produtoSelecionado, quantidade, lucroPercent, custoFixo, produtos]);
-
-  function gerarPDF() {
-    if (!clienteSelecionado || !produtoSelecionado || quantidade < 1) {
-      alert("Preencha todos os campos corretamente.");
-      return;
-    }
-
-    const cliente = clientes.find((c) => c.id === clienteSelecionado);
-    const produto = produtos.find((p) => p.id === produtoSelecionado);
-
-    const doc = new jsPDF();
-
-    doc.setFontSize(20);
-    doc.text("Orçamento Triluminè", 20, 20);
-
-    doc.setFontSize(14);
-    doc.text(`Cliente: ${cliente?.nome || ""}`, 20, 40);
-    doc.text(`Telefone: ${cliente?.telefone || ""}`, 20, 50);
-
-    doc.text(`Produto: ${produto?.nome || ""}`, 20, 70);
-    doc.text(`Quantidade: ${quantidade}`, 20, 80);
-    doc.text(`Preço final: R$ ${precoFinal}`, 20, 90);
-
-    doc.text("Obrigado pela preferência!", 20, 110);
-
-    doc.save(`orcamento_${cliente?.nome || "cliente"}.pdf`);
-  }
+  const gerarOrcamento = () => {
+    if (!cliente || !produto || !quantidade || !precoUnitario) return;
+    const total = parseFloat(quantidade) * parseFloat(precoUnitario);
+    const novoOrcamento = {
+      cliente,
+      produto,
+      quantidade,
+      precoUnitario,
+      total: total.toFixed(2),
+      validade: "7 dias",
+      prazoProducao: "5 dias úteis",
+    };
+    setOrcamentos([...orcamentos, novoOrcamento]);
+    setCliente("");
+    setProduto("");
+    setQuantidade("");
+    setPrecoUnitario("");
+  };
 
   return (
-    <div style={{ padding: 20, fontFamily: "Arial, sans-serif", maxWidth: 600, margin: "auto" }}>
-      <h2>Fazer Orçamento</h2>
+    <div style={styles.container}>
+      <img src={logoSimples} alt="Triluminè" style={styles.logo} />
 
-      <label>
-        Cliente:
-        <select value={clienteSelecionado} onChange={(e) => setClienteSelecionado(e.target.value)}>
-          <option value="">Selecione o cliente</option>
-          {clientes.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.nome}
-            </option>
-          ))}
-        </select>
-      </label>
+      <h2 style={styles.title}>Gerar Orçamento</h2>
 
-      <br /><br />
+      <div style={styles.form}>
+        <input
+          type="text"
+          placeholder="Nome do cliente"
+          value={cliente}
+          onChange={(e) => setCliente(e.target.value)}
+          style={styles.input}
+        />
 
-      <label>
-        Produto:
-        <select value={produtoSelecionado} onChange={(e) => setProdutoSelecionado(e.target.value)}>
-          <option value="">Selecione o produto</option>
-          {produtos.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.nome}
-            </option>
-          ))}
-        </select>
-      </label>
+        <input
+          type="text"
+          placeholder="Produto"
+          value={produto}
+          onChange={(e) => setProduto(e.target.value)}
+          style={styles.input}
+        />
 
-      <br /><br />
-
-      <label>
-        Quantidade:
         <input
           type="number"
-          min="1"
+          placeholder="Quantidade"
           value={quantidade}
-          onChange={(e) => setQuantidade(Number(e.target.value))}
+          onChange={(e) => setQuantidade(e.target.value)}
+          style={styles.input}
         />
-      </label>
 
-      <br /><br />
-
-      <label>
-        % Lucro:
         <input
           type="number"
-          min="0"
-          value={lucroPercent}
-          onChange={(e) => setLucroPercent(Number(e.target.value))}
+          placeholder="Preço unitário (R$)"
+          value={precoUnitario}
+          onChange={(e) => setPrecoUnitario(e.target.value)}
+          style={styles.input}
         />
-      </label>
 
-      <br /><br />
+        <button onClick={gerarOrcamento} style={styles.btnGerar}>
+          Gerar Orçamento
+        </button>
+      </div>
 
-      <label>
-        Custo fixo (ex: internet, luz):
-        <input
-          type="number"
-          min="0"
-          value={custoFixo}
-          onChange={(e) => setCustoFixo(Number(e.target.value))}
-        />
-      </label>
+      <div style={styles.lista}>
+        <h3>Orçamentos Gerados:</h3>
+        {orcamentos.length === 0 && <p>Nenhum orçamento gerado ainda.</p>}
+        <ul>
+          {orcamentos.map((o, i) => (
+            <li key={i} style={{ marginBottom: "1rem" }}>
+              <strong>{o.cliente}</strong> - {o.produto} ({o.quantidade}x R${o.precoUnitario})<br />
+              Total: <strong>R${o.total}</strong><br />
+              Validade: {o.validade} | Produção: {o.prazoProducao}
+            </li>
+          ))}
+        </ul>
+      </div>
 
-      <br /><br />
-
-      <strong>Preço final estimado: R$ {precoFinal}</strong>
-
-      <br /><br />
-
-      <button onClick={gerarPDF} style={{
-        padding: "10px 20px",
-        backgroundColor: "#3ca55c",
-        color: "#fff",
-        border: "none",
-        borderRadius: 5,
-        fontWeight: "bold",
-        cursor: "pointer"
-      }}>
-        Gerar PDF
-      </button>
+      <Link to="/">
+        <button style={styles.btnVoltar}>← Voltar</button>
+      </Link>
     </div>
   );
 }
+
+const styles = {
+  container: {
+    backgroundColor: "#fff",
+    minHeight: "100vh",
+    padding: "2rem",
+    boxSizing: "border-box",
+    maxWidth: "800px",
+    margin: "0 auto",
+  },
+  logo: {
+    width: "150px",
+    display: "block",
+    margin: "0 auto 2rem",
+  },
+  title: {
+    textAlign: "center",
+    fontSize: "1.8rem",
+    marginBottom: "2rem",
+    color: "#333",
+  },
+  form: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "1rem",
+  },
+  input: {
+    padding: "0.8rem",
+    border: "1px solid #ccc",
+    borderRadius: "8px",
+    fontSize: "1rem",
+  },
+  btnGerar: {
+    background: "#28a745",
+    color: "#fff",
+    padding: "1rem",
+    border: "none",
+    borderRadius: "8px",
+    fontWeight: "bold",
+    fontSize: "1rem",
+    cursor: "pointer",
+    marginTop: "0.5rem",
+  },
+  lista: {
+    marginTop: "3rem",
+  },
+  btnVoltar: {
+    display: "block",
+    margin: "2rem auto 0",
+    background: "#fecd1a",
+    color: "#fff",
+    padding: "0.8rem 1.2rem",
+    fontWeight: "bold",
+    border: "none",
+    borderRadius: "8px",
+    cursor: "pointer",
+  },
+};
