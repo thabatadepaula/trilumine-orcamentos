@@ -1,4 +1,4 @@
-import Materiais from "./Materiais";
+import Materiais from "./materiais";
 
 function App() {
   return <Materiais />;
