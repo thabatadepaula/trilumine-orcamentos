@@ -1,39 +1,53 @@
+.menu {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin: 20px 0;
+  flex-wrap: wrap;
+}
+
 .btn {
-  padding: 10px 18px;
-  font-weight: 600;
-  border-radius: 6px;
-  border: none;
+  padding: 10px 20px;
   color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  text-decoration: none;
+  display: inline-block;
   cursor: pointer;
-  font-size: 1rem;
   transition: background-color 0.3s ease;
-  user-select: none;
 }
 
 .btn-amarelo {
-  background-color: #ffc107;
+  background-color: #f8c12d;
 }
 .btn-amarelo:hover {
-  background-color: #e6ac00;
+  background-color: #e1ab23;
 }
 
 .btn-rosa {
   background-color: #e91e63;
 }
 .btn-rosa:hover {
-  background-color: #b0003a;
+  background-color: #c2185b;
 }
 
 .btn-azul {
   background-color: #2196f3;
 }
 .btn-azul:hover {
-  background-color: #0b79d0;
+  background-color: #1976d2;
 }
 
 .btn-verde {
-  background-color: #4caf50;
+  background-color: #3ca55c;
 }
 .btn-verde:hover {
-  background-color: #357a38;
+  background-color: #32904a;
+}
+
+main {
+  padding: 20px;
+  max-width: 900px;
+  margin: auto;
 }

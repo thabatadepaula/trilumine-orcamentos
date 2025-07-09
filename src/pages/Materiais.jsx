@@ -1,34 +1,21 @@
-import React, { useEffect, useState } from "react";
-import { fetchSheetData } from "../service/api";  // ajuste o caminho conforme o seu projeto
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import "../Abas.css";
+import logo from "../assets/logo-trilumine.png02.png";
 
 export default function Materiais() {
-  const [materiais, setMateriais] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    fetchSheetData("materiais")
-      .then(data => {
-        setMateriais(data);
-        setLoading(false);
-      })
-      .catch(err => {
-        setError(err.message);
-        setLoading(false);
-      });
-  }, []);
-
-  if (loading) return <p>Carregando materiais...</p>;
-  if (error) return <p>Erro: {error}</p>;
+  const navigate = useNavigate();
 
   return (
-    <div>
-      <h2>Materiais cadastrados</h2>
-      <ul>
-        {materiais.map((mat) => (
-          <li key={mat.id}>{mat.nome} - {mat.custo}</li>
-        ))}
-      </ul>
+    <div className="page-container">
+      <img src={logo} alt="Logo Trilumine" className="logo" />
+      <h2>Materiais</h2>
+
+      {/* Seu conteúdo aqui */}
+
+      <button className="btn btn-amarelo" onClick={() => navigate("/")}>
+        ← Voltar
+      </button>
     </div>
   );
 }
