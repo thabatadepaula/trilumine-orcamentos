@@ -1,7 +1,5 @@
-import TesteSupabase from "./TesteSupabase";
-
 function App() {
-  return <TesteSupabase />;
+  return <div>App funcionando sem TesteSupabase!</div>;
 }
 
 export default App;
