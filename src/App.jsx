@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
+import { Routes, Route, Link } from "react-router-dom";
 
 import Materiais from "./pages/Materiais";
 import Produtos from "./pages/Produtos";
@@ -10,7 +10,7 @@ import "./Abas.css";
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <>
       <nav className="menu">
         <Link to="/materiais" className="btn btn-amarelo">
           Materiais
@@ -35,6 +35,6 @@ export default function App() {
           <Route path="/orcamentos" element={<Orcamentos />} />
         </Routes>
       </main>
-    </BrowserRouter>
+    </>
   );
 }
