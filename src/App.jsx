@@ -1,5 +1,7 @@
-import Materiais from "./Materiais";
+import Materiais from "./pages/Materiais";
 
-export default function App() {
+function App() {
   return <Materiais />;
 }
+
+export default App;
