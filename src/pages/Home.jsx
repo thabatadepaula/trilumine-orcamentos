@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import logoCompleto from "../assets/logo-trilumine.png02.png";
+import logoCompleto from "../assets/logo-trilumine.png";
 
 export default function Home() {
   return (
