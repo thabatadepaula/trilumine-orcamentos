@@ -4,6 +4,7 @@ import logoSimples from "../assets/logo-trilumine.png";
 import { supabase } from "../lib/supabase";
 
 export default function Materiais() {
+  // Estados do formulário
   const [materiais, setMateriais] = useState([]);
   const [nome, setNome] = useState("");
   const [unidade, setUnidade] = useState("");
@@ -11,17 +12,23 @@ export default function Materiais() {
   const [preco, setPreco] = useState("");
   const [cor, setCor] = useState("");
 
-  const [bobinaMetros, setBobinaMetros] = useState("");
-  const [folhasCalculadas, setFolhasCalculadas] = useState(null);
+  // Estados da calculadora
+  const [largura, setLargura] = useState("");
+  const [comprimento, setComprimento] = useState("");
+  const [precoBobina, setPrecoBobina] = useState("");
+  const [resultadoCalculo, setResultadoCalculo] = useState(null);
 
+  // Carrega materiais do Supabase ao montar o componente
   useEffect(() => {
     const carregarMateriais = async () => {
       const { data, error } = await supabase
         .from("materiais")
         .select("*")
         .order("id", { ascending: false });
+
       if (error) {
         console.error("Erro ao carregar materiais:", error);
+        alert("Erro ao carregar materiais: " + error.message);
       } else {
         setMateriais(data);
       }
@@ -30,8 +37,12 @@ export default function Materiais() {
     carregarMateriais();
   }, []);
 
+  // Função para salvar material no Supabase
   const salvarMaterial = async () => {
-    if (!nome || !unidade || !quantidade || !preco) return;
+    if (!nome || !unidade || !quantidade || !preco) {
+      alert("Preencha todos os campos obrigatórios!");
+      return;
+    }
 
     const novoMaterial = {
       nome,
@@ -41,6 +52,8 @@ export default function Materiais() {
       cor,
     };
 
+    console.log("Tentando salvar material:", novoMaterial);
+
     const { data, error } = await supabase
       .from("materiais")
       .insert(novoMaterial)
@@ -49,12 +62,14 @@ export default function Materiais() {
 
     if (error) {
       console.error("Erro ao salvar material:", error);
-      alert("Erro ao salvar material.");
+      alert("Erro ao salvar material: " + error.message);
       return;
     }
 
+    // Atualiza lista local
     setMateriais([data, ...materiais]);
 
+    // Limpa formulário
     setNome("");
     setUnidade("");
     setQuantidade("");
@@ -62,182 +77,198 @@ export default function Materiais() {
     setCor("");
   };
 
-  const calcularBobina = () => {
-    const larguraBobinaCM = 21;
-    const alturaFolhaCM = 29.7;
-    const metros = parseFloat(bobinaMetros);
-    if (!metros) return setFolhasCalculadas(null);
-    const comprimentoCM = metros * 100;
-    const folhas = Math.floor(comprimentoCM / alturaFolhaCM);
-    setFolhasCalculadas(folhas);
+  // Função da calculadora para preço por folha A4
+  const calcularPrecoPorFolha = () => {
+    const larguraNum = parseFloat(largura);
+    const comprimentoNum = parseFloat(comprimento);
+    const precoNum = parseFloat(precoBobina);
+
+    if (!larguraNum || larguraNum <= 0) {
+      alert("Informe uma largura válida (cm)");
+      return;
+    }
+    if (!comprimentoNum || comprimentoNum <= 0) {
+      alert("Informe um comprimento válido (m)");
+      return;
+    }
+    if (!precoNum || precoNum <= 0) {
+      alert("Informe um preço válido (R$)");
+      return;
+    }
+
+    const areaBobinaCm2 = larguraNum * (comprimentoNum * 100); // cm x cm
+    const areaFolhaA4 = 21 * 29.7; // cm²
+
+    const folhasPossiveis = areaBobinaCm2 / areaFolhaA4;
+    const precoPorFolha = precoNum / folhasPossiveis;
+
+    setResultadoCalculo(precoPorFolha.toFixed(2));
+  };
+
+  // Estilos inline para layout responsivo
+  const containerStyle = {
+    maxWidth: 900,
+    margin: "2rem auto",
+    padding: "0 1rem",
+  };
+
+  const flexContainer = {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: "2rem",
+    justifyContent: "space-between",
+  };
+
+  const boxStyle = {
+    flex: "1 1 320px",
+    backgroundColor: "#f9f9f9",
+    padding: "1.2rem",
+    borderRadius: 8,
+    boxShadow: "0 0 8px rgba(0,0,0,0.1)",
+  };
+
+  const inputStyle = {
+    width: "100%",
+    padding: "0.6rem 0.8rem",
+    marginBottom: "1rem",
+    borderRadius: 5,
+    border: "1px solid #ccc",
+    fontSize: 16,
+  };
+
+  const buttonStyle = {
+    padding: "0.8rem 1.2rem",
+    backgroundColor: "#d75599",
+    color: "#fff",
+    border: "none",
+    borderRadius: 6,
+    fontWeight: "bold",
+    fontSize: 16,
+    cursor: "pointer",
+  };
+
+  const btnCalcularStyle = {
+    ...buttonStyle,
+    backgroundColor: "#3588ab",
+    marginTop: 0,
+  };
+
+  const listaStyle = {
+    marginTop: "2rem",
   };
 
   return (
-    <div style={styles.container}>
-      <img src={logoSimples} alt="Triluminè" style={styles.logo} />
+    <div style={containerStyle}>
+      <img src={logoSimples} alt="Triluminè" style={{ width: 150, display: "block", margin: "0 auto 2rem" }} />
+      <h2 style={{ textAlign: "center", marginBottom: "1.5rem" }}>Cadastro de Materiais</h2>
 
-      <h2 style={styles.title}>Cadastro de Materiais</h2>
+      <div style={flexContainer}>
+        {/* Formulário de cadastro */}
+        <div style={boxStyle}>
+          <h3>Cadastro de Material</h3>
 
-      <div style={styles.form}>
-        <input
-          type="text"
-          placeholder="Nome do material"
-          value={nome}
-          onChange={(e) => setNome(e.target.value)}
-          style={styles.input}
-        />
+          <input
+            type="text"
+            placeholder="Nome do material"
+            value={nome}
+            onChange={(e) => setNome(e.target.value)}
+            style={inputStyle}
+          />
 
-        <select
-          value={unidade}
-          onChange={(e) => setUnidade(e.target.value)}
-          style={styles.input}
-        >
-          <option value="">Unidade de medida</option>
-          <option value="metro">Metro (m)</option>
-          <option value="quilo">Quilo (kg)</option>
-          <option value="unidade">Unidade (un)</option>
-        </select>
+          <select value={unidade} onChange={(e) => setUnidade(e.target.value)} style={inputStyle}>
+            <option value="">Unidade de medida</option>
+            <option value="metro">Metro (m)</option>
+            <option value="quilo">Quilo (kg)</option>
+            <option value="unidade">Unidade (un)</option>
+          </select>
 
-        <input
-          type="number"
-          placeholder="Quantidade"
-          value={quantidade}
-          onChange={(e) => setQuantidade(e.target.value)}
-          style={styles.input}
-        />
+          <input
+            type="number"
+            placeholder="Quantidade"
+            value={quantidade}
+            onChange={(e) => setQuantidade(e.target.value)}
+            style={inputStyle}
+          />
 
-        <input
-          type="number"
-          placeholder="Preço total pago (R$)"
-          value={preco}
-          onChange={(e) => setPreco(e.target.value)}
-          style={styles.input}
-        />
+          <input
+            type="number"
+            placeholder="Preço total pago (R$)"
+            value={preco}
+            onChange={(e) => setPreco(e.target.value)}
+            style={inputStyle}
+          />
 
-        <input
-          type="text"
-          placeholder="Cor (opcional)"
-          value={cor}
-          onChange={(e) => setCor(e.target.value)}
-          style={styles.input}
-        />
+          <input
+            type="text"
+            placeholder="Cor (opcional)"
+            value={cor}
+            onChange={(e) => setCor(e.target.value)}
+            style={inputStyle}
+          />
 
-        <button onClick={salvarMaterial} style={styles.btnSalvar}>
-          Salvar Material
-        </button>
+          <button onClick={salvarMaterial} style={buttonStyle}>
+            Salvar Material
+          </button>
+        </div>
+
+        {/* Calculadora */}
+        <div style={boxStyle}>
+          <h3>Calculadora de Bobina</h3>
+
+          <input
+            type="number"
+            placeholder="Largura da bobina (cm)"
+            value={largura}
+            onChange={(e) => setLargura(e.target.value)}
+            style={inputStyle}
+          />
+
+          <input
+            type="number"
+            placeholder="Comprimento da bobina (m)"
+            value={comprimento}
+            onChange={(e) => setComprimento(e.target.value)}
+            style={inputStyle}
+          />
+
+          <input
+            type="number"
+            placeholder="Preço pago (R$)"
+            value={precoBobina}
+            onChange={(e) => setPrecoBobina(e.target.value)}
+            style={inputStyle}
+          />
+
+          <button onClick={calcularPrecoPorFolha} style={btnCalcularStyle}>
+            Calcular preço por folha
+          </button>
+
+          {resultadoCalculo !== null && (
+            <p style={{ marginTop: 12, fontWeight: "bold" }}>
+              Preço por folha A4: R$ {resultadoCalculo}
+            </p>
+          )}
+        </div>
       </div>
 
-      <div style={styles.bobinaBox}>
-        <h3 style={{ marginBottom: "1rem" }}>Calculadora de Bobina BOPP</h3>
-        <input
-          type="number"
-          placeholder="Informe o comprimento da bobina (em metros)"
-          value={bobinaMetros}
-          onChange={(e) => setBobinaMetros(e.target.value)}
-          style={styles.input}
-        />
-        <button onClick={calcularBobina} style={styles.btnCalcular}>
-          Calcular folhas A4
-        </button>
-        {folhasCalculadas !== null && (
-          <p style={{ marginTop: "0.5rem" }}>
-            Essa bobina pode laminar até <strong>{folhasCalculadas}</strong>{" "}
-            folhas A4 (21 x 29,7 cm).
-          </p>
-        )}
-      </div>
-
-      <div style={styles.lista}>
-        <h3>Materiais Cadastrados:</h3>
+      {/* Lista dos materiais cadastrados */}
+      <div style={listaStyle}>
+        <h3>Materiais Cadastrados</h3>
         {materiais.length === 0 && <p>Nenhum material cadastrado ainda.</p>}
         <ul>
           {materiais.map((mat) => (
             <li key={mat.id}>
-              {mat.nome} - {mat.quantidade} {mat.unidade} - R$
-              {mat.precoTotal?.toFixed(2)} {mat.cor && `- ${mat.cor}`}
+              {mat.nome} - {mat.quantidade} {mat.unidade} - R$ {mat.precoTotal?.toFixed(2)} {mat.cor && `- ${mat.cor}`}
             </li>
           ))}
         </ul>
       </div>
 
       <Link to="/">
-        <button style={styles.btnVoltar}>← Voltar</button>
+        <button style={{ ...buttonStyle, backgroundColor: "#fecd1a", marginTop: "2rem", color: "#000" }}>
+          ← Voltar
+        </button>
       </Link>
     </div>
   );
 }
-
-const styles = {
-  container: {
-    backgroundColor: "#fff",
-    minHeight: "100vh",
-    padding: "2rem",
-    boxSizing: "border-box",
-    maxWidth: "800px",
-    margin: "0 auto",
-  },
-  logo: {
-    width: "150px",
-    display: "block",
-    margin: "0 auto 2rem",
-  },
-  title: {
-    textAlign: "center",
-    fontSize: "1.8rem",
-    marginBottom: "2rem",
-    color: "#333",
-  },
-  form: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "1rem",
-  },
-  input: {
-    padding: "0.8rem",
-    border: "1px solid #ccc",
-    borderRadius: "8px",
-    fontSize: "1rem",
-  },
-  btnSalvar: {
-    background: "#d75599",
-    color: "#fff",
-    padding: "1rem",
-    border: "none",
-    borderRadius: "8px",
-    fontWeight: "bold",
-    fontSize: "1rem",
-    cursor: "pointer",
-    marginTop: "0.5rem",
-  },
-  bobinaBox: {
-    marginTop: "3rem",
-    padding: "1.5rem",
-    border: "1px solid #eee",
-    borderRadius: "8px",
-    background: "#fafafa",
-  },
-  btnCalcular: {
-    background: "#3588ab",
-    color: "#fff",
-    padding: "0.8rem",
-    border: "none",
-    borderRadius: "8px",
-    fontWeight: "bold",
-    marginTop: "1rem",
-    cursor: "pointer",
-  },
-  lista: {
-    marginTop: "3rem",
-  },
-  btnVoltar: {
-    display: "block",
-    margin: "2rem auto 0",
-    background: "#fecd1a",
-    color: "#fff",
-    padding: "0.8rem 1.2rem",
-    fontWeight: "bold",
-    border: "none",
-    borderRadius: "8px",
-    cursor: "pointer",
-  },
-};
