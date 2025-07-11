@@ -8,13 +8,56 @@ export default function Clientes() {
   const [telefone, setTelefone] = useState("");
   const [email, setEmail] = useState("");
 
+  const [cep, setCep] = useState("");
+  const [endereco, setEndereco] = useState("");
+  const [numero, setNumero] = useState("");
+  const [complemento, setComplemento] = useState("");
+
   const salvarCliente = () => {
-    if (!nome) return;
-    const novoCliente = { nome, telefone, email };
+    if (!nome.trim() || !telefone.trim()) {
+      alert("Nome e telefone são obrigatórios.");
+      return;
+    }
+
+    const novoCliente = {
+      nome,
+      telefone,
+      email,
+      enderecoCompleto: `${endereco}, Nº ${numero} ${complemento ? `- ${complemento}` : ""}`,
+    };
+
     setClientes([...clientes, novoCliente]);
+
     setNome("");
     setTelefone("");
     setEmail("");
+    setCep("");
+    setEndereco("");
+    setNumero("");
+    setComplemento("");
+  };
+
+  const buscarEndereco = async (cepDigitado) => {
+    const cepLimpo = cepDigitado.replace(/\D/g, "");
+    setCep(cepLimpo);
+
+    if (cepLimpo.length === 8) {
+      try {
+        const res = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
+        const data = await res.json();
+
+        if (data.erro) {
+          alert("CEP não encontrado.");
+          setEndereco("");
+        } else {
+          setEndereco(`${data.logradouro}, ${data.bairro} - ${data.localidade}/${data.uf}`);
+        }
+      } catch (error) {
+        alert("Erro ao buscar endereço. Tente novamente.");
+      }
+    } else {
+      setEndereco("");
+    }
   };
 
   return (
@@ -26,18 +69,20 @@ export default function Clientes() {
       <div style={styles.form}>
         <input
           type="text"
-          placeholder="Nome do cliente"
+          placeholder="Nome do cliente *"
           value={nome}
           onChange={(e) => setNome(e.target.value)}
           style={styles.input}
+          required
         />
 
         <input
           type="tel"
-          placeholder="Telefone (opcional)"
+          placeholder="Telefone *"
           value={telefone}
           onChange={(e) => setTelefone(e.target.value)}
           style={styles.input}
+          required
         />
 
         <input
@@ -45,6 +90,39 @@ export default function Clientes() {
           placeholder="Email (opcional)"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          style={styles.input}
+        />
+
+        <input
+          type="text"
+          placeholder="CEP"
+          value={cep}
+          onChange={(e) => buscarEndereco(e.target.value)}
+          style={styles.input}
+        />
+
+        {endereco && (
+          <input
+            type="text"
+            value={endereco}
+            disabled
+            style={{ ...styles.input, background: "#eee", color: "#333" }}
+          />
+        )}
+
+        <input
+          type="text"
+          placeholder="Número"
+          value={numero}
+          onChange={(e) => setNumero(e.target.value)}
+          style={styles.input}
+        />
+
+        <input
+          type="text"
+          placeholder="Complemento (opcional)"
+          value={complemento}
+          onChange={(e) => setComplemento(e.target.value)}
           style={styles.input}
         />
 
@@ -62,6 +140,7 @@ export default function Clientes() {
               <strong>{c.nome}</strong>
               {c.telefone && ` - ${c.telefone}`}
               {c.email && ` - ${c.email}`}
+              {c.enderecoCompleto && <><br /><em>{c.enderecoCompleto}</em></>}
             </li>
           ))}
         </ul>
