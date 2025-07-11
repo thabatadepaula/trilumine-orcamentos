@@ -1,21 +1,19 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Home from "./pages/Home.jsx";
-import Materiais from "./pages/Materiais.jsx";
-import Produtos from "./pages/Produtos.jsx";
-import Clientes from "./pages/Clientes.jsx";
-import Orcamentos from "./pages/Orcamentos.jsx";
+import { Routes, Route } from "react-router-dom";
+import Home from "./pages/Home";
+import Materiais from "./pages/Materiais";
+import Produtos from "./pages/Produtos";
+import Clientes from "./pages/Clientes";
+import Orcamentos from "./pages/Orcamentos";
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/materiais" element={<Materiais />} />
-        <Route path="/produtos" element={<Produtos />} />
-        <Route path="/clientes" element={<Clientes />} />
-        <Route path="/orcamentos" element={<Orcamentos />} />
-      </Routes>
-    </Router>
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/materiais" element={<Materiais />} />
+      <Route path="/produtos" element={<Produtos />} />
+      <Route path="/clientes" element={<Clientes />} />
+      <Route path="/orcamentos" element={<Orcamentos />} />
+    </Routes>
   );
 }
 
