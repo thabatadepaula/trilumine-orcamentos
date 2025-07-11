@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import logoSimples from "../assets/logo-trilumine.png";
+import { supabase } from "../lib/supabase";
 
 export default function Clientes() {
   const [clientes, setClientes] = useState([]);
@@ -13,29 +14,21 @@ export default function Clientes() {
   const [numero, setNumero] = useState("");
   const [complemento, setComplemento] = useState("");
 
-  const salvarCliente = () => {
-    if (!nome.trim() || !telefone.trim()) {
-      alert("Nome e telefone são obrigatórios.");
-      return;
-    }
-
-    const novoCliente = {
-      nome,
-      telefone,
-      email,
-      enderecoCompleto: `${endereco}, Nº ${numero} ${complemento ? `- ${complemento}` : ""}`,
+  useEffect(() => {
+    const carregarClientes = async () => {
+      const { data, error } = await supabase
+        .from("clientes")
+        .select("*")
+        .order("id", { ascending: false });
+      if (error) {
+        console.error("Erro ao carregar clientes:", error);
+      } else {
+        setClientes(data);
+      }
     };
 
-    setClientes([...clientes, novoCliente]);
-
-    setNome("");
-    setTelefone("");
-    setEmail("");
-    setCep("");
-    setEndereco("");
-    setNumero("");
-    setComplemento("");
-  };
+    carregarClientes();
+  }, []);
 
   const buscarEndereco = async (cepDigitado) => {
     const cepLimpo = cepDigitado.replace(/\D/g, "");
@@ -50,7 +43,9 @@ export default function Clientes() {
           alert("CEP não encontrado.");
           setEndereco("");
         } else {
-          setEndereco(`${data.logradouro}, ${data.bairro} - ${data.localidade}/${data.uf}`);
+          setEndereco(
+            `${data.logradouro}, ${data.bairro} - ${data.localidade}/${data.uf}`
+          );
         }
       } catch (error) {
         alert("Erro ao buscar endereço. Tente novamente.");
@@ -58,6 +53,43 @@ export default function Clientes() {
     } else {
       setEndereco("");
     }
+  };
+
+  const salvarCliente = async () => {
+    if (!nome.trim() || !telefone.trim()) {
+      alert("Nome e telefone são obrigatórios.");
+      return;
+    }
+
+    const enderecoCompleto = `${endereco}, Nº ${numero} ${
+      complemento ? `- ${complemento}` : ""
+    }`;
+
+    const novoCliente = {
+      nome,
+      telefone,
+      email,
+      endereco: enderecoCompleto,
+    };
+
+    const { error } = await supabase.from("clientes").insert(novoCliente);
+
+    if (error) {
+      console.error("Erro ao salvar no Supabase:", error);
+      alert("Erro ao salvar cliente.");
+      return;
+    }
+
+    setClientes([novoCliente, ...clientes]);
+
+    // Limpar campos
+    setNome("");
+    setTelefone("");
+    setEmail("");
+    setCep("");
+    setEndereco("");
+    setNumero("");
+    setComplemento("");
   };
 
   return (
@@ -73,7 +105,6 @@ export default function Clientes() {
           value={nome}
           onChange={(e) => setNome(e.target.value)}
           style={styles.input}
-          required
         />
 
         <input
@@ -82,7 +113,6 @@ export default function Clientes() {
           value={telefone}
           onChange={(e) => setTelefone(e.target.value)}
           style={styles.input}
-          required
         />
 
         <input
@@ -137,10 +167,14 @@ export default function Clientes() {
         <ul>
           {clientes.map((c, i) => (
             <li key={i}>
-              <strong>{c.nome}</strong>
-              {c.telefone && ` - ${c.telefone}`}
+              <strong>{c.nome}</strong> - {c.telefone}
               {c.email && ` - ${c.email}`}
-              {c.enderecoCompleto && <><br /><em>{c.enderecoCompleto}</em></>}
+              {c.endereco && (
+                <>
+                  <br />
+                  <em>{c.endereco}</em>
+                </>
+              )}
             </li>
           ))}
         </ul>

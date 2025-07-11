@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import logoSimples from "../assets/logo-trilumine.png";
+import { supabase } from "../lib/supabase";
 
 export default function Materiais() {
   const [materiais, setMateriais] = useState([]);
@@ -10,15 +11,28 @@ export default function Materiais() {
   const [preco, setPreco] = useState("");
   const [cor, setCor] = useState("");
 
-  // Estados da calculadora de bobina
-  const [larguraBobina, setLarguraBobina] = useState("");
-  const [comprimentoBobina, setComprimentoBobina] = useState("");
-  const [precoBobina, setPrecoBobina] = useState("");
-  const [precoPorFolha, setPrecoPorFolha] = useState(null);
+  const [bobinaMetros, setBobinaMetros] = useState("");
+  const [folhasCalculadas, setFolhasCalculadas] = useState(null);
 
-  // Salvar material (igual ao seu)
-  const salvarMaterial = () => {
+  useEffect(() => {
+    const carregarMateriais = async () => {
+      const { data, error } = await supabase
+        .from("materiais")
+        .select("*")
+        .order("id", { ascending: false });
+      if (error) {
+        console.error("Erro ao carregar materiais:", error);
+      } else {
+        setMateriais(data);
+      }
+    };
+
+    carregarMateriais();
+  }, []);
+
+  const salvarMaterial = async () => {
     if (!nome || !unidade || !quantidade || !preco) return;
+
     const novoMaterial = {
       nome,
       unidade,
@@ -26,7 +40,21 @@ export default function Materiais() {
       precoTotal: parseFloat(preco),
       cor,
     };
-    setMateriais([...materiais, novoMaterial]);
+
+    const { data, error } = await supabase
+      .from("materiais")
+      .insert(novoMaterial)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Erro ao salvar material:", error);
+      alert("Erro ao salvar material.");
+      return;
+    }
+
+    setMateriais([data, ...materiais]);
+
     setNome("");
     setUnidade("");
     setQuantidade("");
@@ -34,31 +62,14 @@ export default function Materiais() {
     setCor("");
   };
 
-  // Calcular preço por folha laminada
-  const calcularPrecoPorFolha = () => {
-    const larg = parseFloat(larguraBobina);
-    const comp = parseFloat(comprimentoBobina);
-    const precoTotal = parseFloat(precoBobina);
-
-    if (!larg || larg <= 0) {
-      alert("Informe a largura da bobina em cm válida.");
-      return;
-    }
-    if (!comp || comp <= 0) {
-      alert("Informe o comprimento da bobina em metros válido.");
-      return;
-    }
-    if (!precoTotal || precoTotal <= 0) {
-      alert("Informe o preço total pago válido.");
-      return;
-    }
-
-    const areaBobina = larg * (comp * 100); // cm²
-    const areaFolha = 21 * 29.7; // A4 em cm²
-    const folhas = areaBobina / areaFolha;
-    const precoFolha = precoTotal / folhas;
-
-    setPrecoPorFolha(precoFolha.toFixed(2));
+  const calcularBobina = () => {
+    const larguraBobinaCM = 21;
+    const alturaFolhaCM = 29.7;
+    const metros = parseFloat(bobinaMetros);
+    if (!metros) return setFolhasCalculadas(null);
+    const comprimentoCM = metros * 100;
+    const folhas = Math.floor(comprimentoCM / alturaFolhaCM);
+    setFolhasCalculadas(folhas);
   };
 
   return (
@@ -67,102 +78,83 @@ export default function Materiais() {
 
       <h2 style={styles.title}>Cadastro de Materiais</h2>
 
-      <div style={styles.dualBox}>
-        {/* Formulário de materiais */}
-        <div style={styles.form}>
-          <input
-            type="text"
-            placeholder="Nome do material"
-            value={nome}
-            onChange={(e) => setNome(e.target.value)}
-            style={styles.input}
-          />
+      <div style={styles.form}>
+        <input
+          type="text"
+          placeholder="Nome do material"
+          value={nome}
+          onChange={(e) => setNome(e.target.value)}
+          style={styles.input}
+        />
 
-          <select
-            value={unidade}
-            onChange={(e) => setUnidade(e.target.value)}
-            style={styles.input}
-          >
-            <option value="">Unidade de medida</option>
-            <option value="metro">Metro (m)</option>
-            <option value="quilo">Quilo (kg)</option>
-            <option value="unidade">Unidade (un)</option>
-          </select>
+        <select
+          value={unidade}
+          onChange={(e) => setUnidade(e.target.value)}
+          style={styles.input}
+        >
+          <option value="">Unidade de medida</option>
+          <option value="metro">Metro (m)</option>
+          <option value="quilo">Quilo (kg)</option>
+          <option value="unidade">Unidade (un)</option>
+        </select>
 
-          <input
-            type="number"
-            placeholder="Quantidade"
-            value={quantidade}
-            onChange={(e) => setQuantidade(e.target.value)}
-            style={styles.input}
-          />
+        <input
+          type="number"
+          placeholder="Quantidade"
+          value={quantidade}
+          onChange={(e) => setQuantidade(e.target.value)}
+          style={styles.input}
+        />
 
-          <input
-            type="number"
-            placeholder="Preço total pago (R$)"
-            value={preco}
-            onChange={(e) => setPreco(e.target.value)}
-            style={styles.input}
-          />
+        <input
+          type="number"
+          placeholder="Preço total pago (R$)"
+          value={preco}
+          onChange={(e) => setPreco(e.target.value)}
+          style={styles.input}
+        />
 
-          <input
-            type="text"
-            placeholder="Cor (opcional)"
-            value={cor}
-            onChange={(e) => setCor(e.target.value)}
-            style={styles.input}
-          />
+        <input
+          type="text"
+          placeholder="Cor (opcional)"
+          value={cor}
+          onChange={(e) => setCor(e.target.value)}
+          style={styles.input}
+        />
 
-          <button onClick={salvarMaterial} style={styles.btnSalvar}>
-            Salvar Material
-          </button>
-        </div>
-
-        {/* Calculadora de bobina */}
-        <div style={styles.bobinaBox}>
-          <h3 style={{ marginBottom: "1rem" }}>Calculadora de Bobina BOPP</h3>
-          <input
-            type="number"
-            placeholder="Largura da bobina (cm)"
-            value={larguraBobina}
-            onChange={(e) => setLarguraBobina(e.target.value)}
-            style={styles.input}
-          />
-          <input
-            type="number"
-            placeholder="Comprimento da bobina (m)"
-            value={comprimentoBobina}
-            onChange={(e) => setComprimentoBobina(e.target.value)}
-            style={styles.input}
-          />
-          <input
-            type="number"
-            placeholder="Preço total pago (R$)"
-            value={precoBobina}
-            onChange={(e) => setPrecoBobina(e.target.value)}
-            style={styles.input}
-          />
-          <button onClick={calcularPrecoPorFolha} style={styles.btnCalcular}>
-            Calcular preço por folha
-          </button>
-
-          {precoPorFolha !== null && (
-            <p style={{ marginTop: "0.5rem" }}>
-              Preço por folha A4: <strong>R$ {precoPorFolha}</strong>
-            </p>
-          )}
-        </div>
+        <button onClick={salvarMaterial} style={styles.btnSalvar}>
+          Salvar Material
+        </button>
       </div>
 
-      {/* Lista de materiais */}
+      <div style={styles.bobinaBox}>
+        <h3 style={{ marginBottom: "1rem" }}>Calculadora de Bobina BOPP</h3>
+        <input
+          type="number"
+          placeholder="Informe o comprimento da bobina (em metros)"
+          value={bobinaMetros}
+          onChange={(e) => setBobinaMetros(e.target.value)}
+          style={styles.input}
+        />
+        <button onClick={calcularBobina} style={styles.btnCalcular}>
+          Calcular folhas A4
+        </button>
+        {folhasCalculadas !== null && (
+          <p style={{ marginTop: "0.5rem" }}>
+            Essa bobina pode laminar até <strong>{folhasCalculadas}</strong>{" "}
+            folhas A4 (21 x 29,7 cm).
+          </p>
+        )}
+      </div>
+
       <div style={styles.lista}>
         <h3>Materiais Cadastrados:</h3>
         {materiais.length === 0 && <p>Nenhum material cadastrado ainda.</p>}
         <ul>
-          {materiais.map((mat, index) => (
-            <li key={index}>
+          {materiais.map((mat) => (
+            <li key={mat.id}>
               {mat.nome} - {mat.quantidade} {mat.unidade} - R$
-              {mat.precoTotal.toFixed(2)} {mat.cor && `- ${mat.cor}`}
+              {mat.precoTotal?.toFixed(2)} {mat.cor && `- ${mat.cor}`}
             </li>
           ))}
         </ul>
@@ -195,14 +187,7 @@ const styles = {
     marginBottom: "2rem",
     color: "#333",
   },
-  dualBox: {
-    display: "flex",
-    gap: "2rem",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-  },
   form: {
-    flex: "1 1 350px",
     display: "flex",
     flexDirection: "column",
     gap: "1rem",
@@ -225,13 +210,11 @@ const styles = {
     marginTop: "0.5rem",
   },
   bobinaBox: {
-    flex: "1 1 350px",
-    marginTop: "0",
+    marginTop: "3rem",
     padding: "1.5rem",
     border: "1px solid #eee",
     borderRadius: "8px",
     background: "#fafafa",
-    boxSizing: "border-box",
   },
   btnCalcular: {
     background: "#3588ab",
