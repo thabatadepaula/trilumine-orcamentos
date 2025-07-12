@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import logoSimples from "../assets/logo-trilumine.png";
+import logo from "../assets/logo-trilumine.png";
 import { supabase } from "../lib/supabase";
 
 export default function Materiais() {
