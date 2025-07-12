@@ -1,213 +1,151 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-import logoSimples from "../assets/logo-trilumine.png";
+import logo from "../assets/logo-trilumine.png";
+import "../App.css";
 
 export default function Materiais() {
   const [nome, setNome] = useState("");
-  const [medida, setMedida] = useState("unidade");
+  const [medida, setMedida] = useState("");
   const [quantidade, setQuantidade] = useState("");
-  const [precoUnitario, setPrecoUnitario] = useState("");
+  const [preco, setPreco] = useState("");
+  const [precoTotal, setPrecoTotal] = useState("");
   const [cor, setCor] = useState("");
-  const [precoPago, setPrecoPago] = useState("");
+  const [largura, setLargura] = useState("");
+  const [comprimento, setComprimento] = useState("");
+  const [valorPago, setValorPago] = useState("");
 
-  const [bobinaLargura, setBobinaLargura] = useState("");
-  const [bobinaComprimento, setBobinaComprimento] = useState("");
-  const [bobinaPreco, setBobinaPreco] = useState("");
+  const navigate = useNavigate();
 
-  async function salvarMaterial() {
-    if (!nome || !quantidade || !precoUnitario) {
-      alert("Preencha todos os campos obrigatórios.");
+  const handleSalvar = async () => {
+    if (!nome || !medida || !quantidade || !preco) {
+      alert("Preencha todos os campos obrigatórios");
       return;
     }
 
-    const precoTotal = parseFloat(precoUnitario) * parseFloat(quantidade);
-
-    const { error } = await supabase.from("materiais").insert({
-      nome,
-      medida,
-      quantidade: parseFloat(quantidade),
-      precoUnitario: parseFloat(precoUnitario),
-      precoTotal,
-      cor: cor || null,
-    });
+    const { error } = await supabase.from("materiais").insert([
+      {
+        nome,
+        medida,
+        quantidade: parseFloat(quantidade),
+        preco: parseFloat(preco),
+        precoTotal: parseFloat(precoTotal || 0),
+        precoUnitario: parseFloat(preco),
+        cor,
+      },
+    ]);
 
     if (error) {
       alert("Erro ao salvar material: " + error.message);
     } else {
       alert("Material salvo com sucesso!");
       setNome("");
-      setMedida("unidade");
+      setMedida("");
       setQuantidade("");
-      setPrecoUnitario("");
+      setPreco("");
+      setPrecoTotal("");
       setCor("");
-      setPrecoPago("");
     }
-  }
+  };
 
-  function calcularPrecoUnitarioAutomatico() {
-    if (precoPago && quantidade) {
-      const preco = parseFloat(precoPago) / parseFloat(quantidade);
-      setPrecoUnitario(preco.toFixed(2));
-    }
-  }
-
-  function calcularPrecoPorFolha() {
-    if (!bobinaLargura || !bobinaComprimento || !bobinaPreco) {
-      alert("Preencha todos os campos da bobina");
+  const calcularPrecoBobina = () => {
+    if (!largura || !comprimento || !valorPago) {
+      alert("Preencha todos os campos da calculadora");
       return;
     }
 
-    const larguraA4 = 21;
-    const alturaA4 = 29.7;
+    const larguraFolhaA4 = 21;
+    const alturaFolhaA4 = 29.7;
 
-    const larguraM = parseFloat(bobinaLargura) / 100;
-    const comprimentoM = parseFloat(bobinaComprimento);
-    const precoTotal = parseFloat(bobinaPreco);
+    const areaBobina = (parseFloat(largura) / 100) * parseFloat(comprimento);
+    const areaFolhaA4 = (larguraFolhaA4 / 100) * (alturaFolhaA4 / 100);
+    const totalFolhas = areaBobina / areaFolhaA4;
+    const precoPorFolha = parseFloat(valorPago) / totalFolhas;
 
-    const areaTotal = larguraM * comprimentoM;
-    const areaFolhaA4 = (larguraA4 / 100) * (alturaA4 / 100);
-    const totalFolhas = areaTotal / areaFolhaA4;
-    const precoPorFolha = precoTotal / totalFolhas;
+    setQuantidade(Math.floor(totalFolhas));
+    setPreco(precoPorFolha.toFixed(2));
+    setPrecoTotal(parseFloat(valorPago));
+  };
 
-    setPrecoUnitario(precoPorFolha.toFixed(2));
-  }
+  const calcularPrecoUnitario = () => {
+    if (!quantidade || !precoTotal) return;
+    const precoUnit = parseFloat(precoTotal) / parseFloat(quantidade);
+    setPreco(precoUnit.toFixed(2));
+  };
 
   return (
-    <div style={{ background: "#fff", minHeight: "100vh", padding: "2rem" }}>
-      <img
-        src={logoSimples}
-        alt="Trilumine Logo"
-        style={{ display: "block", margin: "0 auto", width: "130px" }}
-      />
-      <h2 style={{ textAlign: "center", marginTop: "1rem" }}>
-        Cadastro de Materiais
-      </h2>
-
-      <div
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          maxWidth: "1000px",
-          margin: "2rem auto",
-          gap: "2rem",
-          justifyContent: "center",
-        }}
-      >
-        <div style={{ flex: 1, minWidth: "300px" }}>
+    <div className="container">
+      <img src={logo} alt="Trilumine" className="logo" />
+      <h2>Cadastro de Materiais</h2>
+      <div className="form-section">
+        <div className="form-group">
           <input
+            type="text"
             placeholder="Nome do material"
             value={nome}
             onChange={(e) => setNome(e.target.value)}
-            style={{ width: "100%", marginBottom: "10px" }}
           />
           <select
             value={medida}
             onChange={(e) => setMedida(e.target.value)}
-            style={{ width: "100%", marginBottom: "10px" }}
           >
-            <option value="unidade">Selecione a medida</option>
+            <option value="">Selecione a medida</option>
             <option value="unidade">Unidade</option>
-            <option value="m">Metro</option>
-            <option value="cm">Centímetro</option>
-            <option value="g">Gramas</option>
-            <option value="kg">Quilos</option>
+            <option value="metro">Metro</option>
+            <option value="folha">Folha</option>
           </select>
           <input
+            type="number"
             placeholder="Quantidade"
             value={quantidade}
-            onChange={(e) => {
-              setQuantidade(e.target.value);
-              calcularPrecoUnitarioAutomatico();
-            }}
-            style={{ width: "100%", marginBottom: "10px" }}
+            onChange={(e) => setQuantidade(e.target.value)}
+            onBlur={calcularPrecoUnitario}
           />
           <input
+            type="number"
             placeholder="Preço unitário (R$)"
-            value={precoUnitario}
-            onChange={(e) => setPrecoUnitario(e.target.value)}
-            style={{ width: "100%", marginBottom: "10px" }}
+            value={preco}
+            onChange={(e) => setPreco(e.target.value)}
           />
           <input
+            type="text"
             placeholder="Cor (opcional)"
             value={cor}
             onChange={(e) => setCor(e.target.value)}
-            style={{ width: "100%", marginBottom: "10px" }}
           />
-
-          <button
-            onClick={salvarMaterial}
-            style={{
-              width: "100%",
-              backgroundColor: "#d42f7e",
-              color: "#fff",
-              padding: "0.8rem",
-              fontWeight: "bold",
-              borderRadius: "8px",
-              marginBottom: "10px",
-              border: "none",
-              cursor: "pointer",
-            }}
-          >
+          <button className="btn btn-pink" onClick={handleSalvar}>
             Salvar Material
           </button>
         </div>
 
-        <div style={{ flex: 1, minWidth: "300px" }}>
+        <div className="form-group">
           <h3>Conversão de Bobina</h3>
           <input
+            type="number"
             placeholder="Largura da bobina (cm)"
-            value={bobinaLargura}
-            onChange={(e) => setBobinaLargura(e.target.value)}
-            style={{ width: "100%", marginBottom: "10px" }}
+            value={largura}
+            onChange={(e) => setLargura(e.target.value)}
           />
           <input
+            type="number"
             placeholder="Comprimento (m)"
-            value={bobinaComprimento}
-            onChange={(e) => setBobinaComprimento(e.target.value)}
-            style={{ width: "100%", marginBottom: "10px" }}
+            value={comprimento}
+            onChange={(e) => setComprimento(e.target.value)}
           />
           <input
+            type="number"
             placeholder="Preço pago (R$)"
-            value={bobinaPreco}
-            onChange={(e) => setBobinaPreco(e.target.value)}
-            style={{ width: "100%", marginBottom: "10px" }}
+            value={valorPago}
+            onChange={(e) => setValorPago(e.target.value)}
           />
-          <button
-            onClick={calcularPrecoPorFolha}
-            style={{
-              width: "100%",
-              backgroundColor: "#2a84a2",
-              color: "#fff",
-              padding: "0.8rem",
-              fontWeight: "bold",
-              borderRadius: "8px",
-              border: "none",
-              cursor: "pointer",
-            }}
-          >
+          <button className="btn btn-blue" onClick={calcularPrecoBobina}>
             Calcular preço por folha A4
           </button>
         </div>
       </div>
-
-      <Link to="/">
-        <button
-          style={{
-            display: "block",
-            margin: "0 auto",
-            marginTop: "1rem",
-            backgroundColor: "#fecd1a",
-            color: "#000",
-            padding: "0.8rem 1.2rem",
-            fontWeight: "bold",
-            borderRadius: "8px",
-            border: "none",
-          }}
-        >
-          ← Voltar
-        </button>
-      </Link>
+      <button className="btn btn-yellow" onClick={() => navigate("/")}>
+        ← Voltar
+      </button>
     </div>
   );
 }
