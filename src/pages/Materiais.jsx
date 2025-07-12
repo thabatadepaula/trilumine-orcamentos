@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import logoSimples from "../assets/logo-trilumine.png2.png";
+import logoSimples from "../assets/logo-trilumine.png";
 
 export default function Materiais() {
   const [nome, setNome] = useState("");
